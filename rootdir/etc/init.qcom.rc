@@ -38,7 +38,8 @@ on early-init
     chmod 0755 /sys/kernel/debug
 
 on init
-    export LD_SHIM_LIBS /system/lib/libril.so|libshim_ril.so
+    # Use this trick to get a running rild
+    export LD_SHIM_LIBS /system/lib/libril.so|libril_jflte.so
 
     # Set permissions for efs partition
     mkdir /efs 0771 system radio
@@ -47,7 +48,10 @@ on init
 
 on fs
     mount_all fstab.qcom
-    setprop ro.product.name jgedlteue
+    setprop ro.product.name jflte
+
+    chown system radio /dev/block/platform/msm_sdcc.1/by-name
+    chmod 0775 /dev/block/platform/msm_sdcc.1/by-name
 
 on post-fs-data
     # Create directories for tombstone
@@ -76,9 +80,6 @@ on post-fs-data
 
     # Create directory for HDCP 2.x
     mkdir /data/system/hdcp2 0775 system system
-
-    # Create directory for hostapd
-    mkdir /data/hostapd 0770 system wifi
 
     # Create directory from IMS services
     mkdir /data/shared 0755 system system
@@ -135,9 +136,6 @@ on post-fs-data
     mkdir /efs/wifi 0775 radio system
     chown system system /efs/wifi/.mac.info
     chmod 0664 /efs/wifi/.mac.info
-    
-    # Wifi firmware reload path
-    chown wifi wifi /sys/module/wlan/parameters/fwpath
 
     # Create QCN WPA_supplicant symlink for ar6000 wpa_supplicant
     mkdir /data/system 0775 system system
@@ -275,8 +273,6 @@ on boot
     chown system system /sys/class/sec/sec_touchkey/keypad_enable
     chmod 0660 /sys/class/sec/sec_touchkey/keypad_enable
 
-    chown system radio /sys/class/sec/tsp/cmd
-
     # TCP
     chown system system /sys/kernel/ipv4/tcp_wmem_min
     chown system system /sys/kernel/ipv4/tcp_wmem_def
@@ -394,7 +390,7 @@ on boot
 service qcamerasvr /system/bin/mm-qcamera-daemon
     class late_start
     user camera
-    group camera system inet input graphics bluetooth
+    group camera system inet input graphics
 
 service mpdecision /system/bin/mpdecision --avg_comp
     class main
@@ -431,6 +427,14 @@ service insthk /system/bin/insthk
 on property:sys.qseecomd.enable=true
     start insthk
 
+# LEDify
+service ledify /system/bin/ledify
+    class late_start
+    user root
+    group shell
+    seclabel u:r:init:s0
+    oneshot
+
 service irsc_util /system/bin/irsc_util "/etc/sec_config"
     class main
     user root
@@ -440,19 +444,27 @@ service irsc_util /system/bin/irsc_util "/etc/sec_config"
 service qmuxd /system/bin/qmuxd
     class main
     user root
-    group radio audio bluetooth gps qcom_diag log
+    group radio audio bluetooth gps diag log
 
 service netmgrd /system/bin/netmgrd
     class main
+
+# Start ril-daemon
+service ril-daemon /vendor/bin/hw/rild
+    class main
+    socket rild stream 660 root radio
+    socket sap_uim_socket1 stream 660 bluetooth bluetooth
+    socket rild-debug stream 660 radio system
     user root
-    group root wifi wakelock radio inet
+    group radio cache inet misc audio log readproc wakelock diag oem_2901
+    capabilities BLOCK_SUSPEND NET_ADMIN NET_RAW
 
 # Adjust socket buffer to enlarge TCP receive window for high bandwidth
 # but only if ro.data.large_tcp_window_size property is set.
 on property:ro.data.large_tcp_window_size=true
     write /proc/sys/net/ipv4/tcp_adv_win_scale  2
 
-service p2p_supplicant /system/vendor/bin/hw/wpa_supplicant \
+service wpa_supplicant /vendor/bin/hw/wpa_supplicant \
     -iwlan0 -Dnl80211 -c/data/misc/wifi/wpa_supplicant.conf \
     -I/system/etc/wifi/wpa_supplicant_overlay.conf -N \
     -ip2p0 -Dnl80211 -c/data/misc/wifi/p2p_supplicant.conf \
@@ -468,35 +480,27 @@ service p2p_supplicant /system/vendor/bin/hw/wpa_supplicant \
     disabled
     oneshot
 
-service wpa_supplicant /system/bin/wpa_supplicant -g@android:wpa_wlan0 \
-    -iwlan0 -Dnl80211 -c/data/misc/wifi/wpa_supplicant.conf -e/data/misc/wifi/entropy.bin
-    #   we will start as root and wpa_supplicant will switch to user wifi
-    #   after setting up the capabilities required for WEXT
-    #   user wifi
-    #   group wifi inet keystore
-    class main
-    socket wpa_wlan0 dgram 660 wifi wifi
-    disabled
-    oneshot
-
 service macloader /system/bin/macloader
     class main
     oneshot
-    seclabel u:r:macloader_exec:s0
 
 on property:init.svc.macloader=stopped
     chown root system /data/.rev
     chmod 0664 /data/.rev
 
-service charger /sbin/healthd -c
+service charger /charger
     class charger
-    seclabel u:r:healthd:s0
+    seclabel u:r:charger:s0
 
 service thermal-engine /system/bin/thermal-engine
     class main
     user root
     group root
 
-# Disable boot timeout for external modems
+on property:wlan.driver.status=ok
+    # Wifi firmware reload path
+    chown wifi wifi /sys/module/dhd/parameters/firmware_path
+
+# Disable boot timeout for external modems.
 on property:persist.sys.mdm.timeout_disable=1
     write /sys/module/mdm_common/parameters/disable_boot_timeout 1
