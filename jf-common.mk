@@ -207,8 +207,8 @@ PRODUCT_PACKAGES += \
     ueventd.qcom.rc
 
 # Sensors
-PRODUCT_PACKAGES += \
-    android.hardware.sensors@1.0-impl 
+#PRODUCT_PACKAGES += \
+#    android.hardware.sensors@1.0-impl 
     
 # RIL
 PRODUCT_PACKAGES += \
