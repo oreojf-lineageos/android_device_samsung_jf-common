@@ -95,11 +95,11 @@ PRODUCT_PACKAGES += \
     android.hardware.bluetooth@1.0-impl
 
 # Camera
-PRODUCT_PACKAGES += \
-    android.hardware.camera.provider@2.4-impl \
-    camera.device@3.2-impl \
-    Snap \
-    camera.msm8960
+#PRODUCT_PACKAGES += \
+#    android.hardware.camera.provider@2.4-impl \
+#    camera.device@3.2-impl \
+#    Snap \
+#    camera.msm8960
 
 # Display
 PRODUCT_PACKAGES += \
