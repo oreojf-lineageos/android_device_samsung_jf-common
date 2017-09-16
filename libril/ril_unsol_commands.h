@@ -62,4 +62,3 @@
     {RIL_UNSOL_LCEDATA_RECV, radio::lceDataInd, WAKE_PARTIAL},
     {RIL_UNSOL_PCO_DATA, radio::pcoDataInd, WAKE_PARTIAL},
     {RIL_UNSOL_MODEM_RESTART, radio::modemResetInd, WAKE_PARTIAL},
-

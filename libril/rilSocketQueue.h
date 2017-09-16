@@ -165,4 +165,3 @@ int Ril_queue<T>::empty(void) {
         return 0;
     }
 }
-

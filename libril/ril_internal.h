@@ -96,4 +96,3 @@ void onNewCommandConnect(RIL_SOCKET_ID socket_id);
 }   // namespace android
 
 #endif //ANDROID_RIL_INTERNAL_H
-

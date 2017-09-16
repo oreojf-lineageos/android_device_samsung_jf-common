@@ -214,4 +214,3 @@ class RilSapSocket : public RilSocket {
 };
 
 #endif /*RIL_UIM_SOCKET_H_INCLUDED*/
-

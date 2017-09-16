@@ -68,4 +68,3 @@ class RilSocket {
 };
 
 #endif
-

@@ -382,4 +382,3 @@ void ril_event_loop()
         firePending();
     }
 }
-
