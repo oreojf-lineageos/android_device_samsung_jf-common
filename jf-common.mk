@@ -98,12 +98,10 @@ PRODUCT_PACKAGES += \
     android.hardware.bluetooth@1.0-impl
 
 # Camera
-#PRODUCT_PACKAGES += \
-#    android.hardware.camera.provider@2.4-impl \
-#    camera.device@3.2-impl \
-#    Snap \
-#    camera.msm8960
-
+PRODUCT_PACKAGES += \
+    camera.msm8960 \
+    Snap \
+    
 # Display
 PRODUCT_PACKAGES += \
     android.hardware.graphics.allocator@2.0-impl \
@@ -214,10 +212,6 @@ PRODUCT_PACKAGES += \
 # Sensors
 PRODUCT_PACKAGES += \
     android.hardware.sensors@1.0-impl 
-    
-# RIL
-PRODUCT_PACKAGES += \
-    libshim_ril
 
 # SPN override
 PRODUCT_COPY_FILES += \
